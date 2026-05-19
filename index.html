@@ -495,12 +495,7 @@
         Giriş Yap
       </button>
 
-      <div style="margin-top:20px;padding:14px;border-radius:12px;background:#f5f8fc;color:#42546d;font-size:14px;line-height:1.7;">
-        <strong>Demo Admin Hesabı</strong><br>
-        E-Posta: <b>osman@belekyapi.com</b><br>
-        Şifre: <b>Max21Vox47**</b>
       </div>
-    </div>
   </div>
   <div class="app">
     <aside class="sidebar">
@@ -828,6 +823,7 @@
 
     function deletePriceItem(button) {
       button.closest('tr').remove();
+      saveAllData();
     }
 
     function addPriceItem() {
@@ -863,6 +859,7 @@
       document.getElementById('productSale').value = '';
 
       closePriceForm();
+      saveAllData();
     }
 
     function importPriceListExcel(event) {
@@ -900,6 +897,7 @@
         });
 
         event.target.value = '';
+        saveAllData();
         alert('Fiyat listesi içeri aktarıldı.');
       };
 
@@ -944,6 +942,7 @@
 
     function deleteAccount(button) {
       button.closest('.account-row').remove();
+      saveAllData();
     }
 
     function addAccount() {
@@ -1006,7 +1005,110 @@
       movementTable.prepend(movementRow);
 
       closeAccountForm();
+      saveAllData();
     }
+
+    function saveAllData() {
+      const accounts = [];
+      document.querySelectorAll('#cari .account-row').forEach(row => {
+        const ps = row.querySelectorAll('p');
+        accounts.push({
+          name: row.querySelector('h4')?.innerText || '',
+          code: ps[0]?.innerText || '',
+          phone: ps[1]?.innerText || '',
+          email: ps[2]?.innerText || '',
+          money: row.querySelector('.account-money')?.childNodes[0]?.textContent?.trim() || '₺0,00',
+          type: row.querySelector('.badge')?.innerText || ''
+        });
+      });
+
+      const movements = [];
+      document.querySelectorAll('#movementsTableBody tr').forEach(row => {
+        const cols = row.querySelectorAll('td');
+        movements.push({
+          date: cols[0]?.innerText || '',
+          account: cols[1]?.innerText || '',
+          action: cols[2]?.innerText || '',
+          amount: cols[3]?.innerText || '',
+          status: cols[4]?.innerText || '',
+          badgeClass: cols[4]?.querySelector('.badge')?.className || 'badge green-badge'
+        });
+      });
+
+      const prices = [];
+      document.querySelectorAll('#priceTableBody tr').forEach(row => {
+        const cols = row.querySelectorAll('td');
+        prices.push({
+          code: cols[0]?.innerText || '',
+          name: cols[1]?.innerText || '',
+          unit: cols[2]?.innerText || '',
+          purchase: cols[3]?.innerText || '',
+          sale: cols[4]?.innerText || '',
+          vat: cols[5]?.innerText || ''
+        });
+      });
+
+      localStorage.setItem('muhasebeProData', JSON.stringify({ accounts, movements, prices }));
+    }
+
+    function loadAllData() {
+      const saved = localStorage.getItem('muhasebeProData');
+      if (!saved) return;
+
+      const data = JSON.parse(saved);
+
+      const accountPanel = document.querySelector('#cari .panel');
+      document.querySelectorAll('#cari .account-row').forEach(row => row.remove());
+      [...(data.accounts || [])].reverse().forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'account-row';
+        row.innerHTML = `
+          <button class="delete-account" onclick="deleteAccount(this)"><i class="fa-solid fa-trash"></i></button>
+          <div>
+            <h4>${item.name}</h4>
+            <p>${item.code}</p>
+            <p>${item.phone}</p>
+            <p>${item.email}</p>
+          </div>
+          <div class="account-money">${item.money}<br>
+            <span class="badge ${item.type === 'Müşteri' ? 'green-badge' : item.type === 'Tedarikçi' ? 'orange-badge' : 'red-badge'}">${item.type}</span>
+          </div>
+        `;
+        document.querySelector('.add-account-form').insertAdjacentElement('afterend', row);
+      });
+
+      const movementTable = document.getElementById('movementsTableBody');
+      movementTable.innerHTML = '';
+      (data.movements || []).forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.account}</td>
+          <td>${item.action}</td>
+          <td>${item.amount}</td>
+          <td><span class="${item.badgeClass}">${item.status}</span></td>
+        `;
+        movementTable.appendChild(row);
+      });
+
+      const priceTable = document.getElementById('priceTableBody');
+      priceTable.innerHTML = '';
+      (data.prices || []).forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.code}</td>
+          <td>${item.name}</td>
+          <td>${item.unit}</td>
+          <td>${item.purchase}</td>
+          <td>${item.sale}</td>
+          <td>${item.vat}</td>
+          <td><button class="delete-account" style="position:static;transform:none;" onclick="deletePriceItem(this)"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        priceTable.appendChild(row);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAllData);
   </script>
 </body>
 </html>
