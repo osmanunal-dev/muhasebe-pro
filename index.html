@@ -1253,4 +1253,27 @@
           <td>${item.vat}</td>
           <td><button class="delete-account" style="position:static;transform:none;" onclick="deletePriceItem(this)"><i class="fa-solid fa-trash"></i></button></td>
         `;
-        priceTable.a
+        priceTable.appendChild(row);
+      });
+
+      const invoiceTable = document.getElementById('invoiceTableBody');
+      invoiceTable.innerHTML = '';
+      (data.invoices || []).forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.no}</td>
+          <td>${item.account}</td>
+          <td>${item.date}</td>
+          <td>${item.dueDate}</td>
+          <td>${item.amount}</td>
+          <td><span class="${item.badgeClass}">${item.status}</span></td>
+          <td><button class="delete-account" style="position:static;transform:none;" onclick="deleteInvoice(this)"><i class="fa-solid fa-trash"></i></button></td>
+        `;
+        invoiceTable.appendChild(row);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAllData);
+  </script>
+</body>
+</html>
