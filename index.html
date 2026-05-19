@@ -745,7 +745,28 @@
             <input type="text" id="invoiceNo" placeholder="Fatura No">
             <input type="date" id="invoiceDate">
             <select id="invoiceAccount"></select>
-            <input type="number" id="invoiceAmount" placeholder="Fatura Tutarı">
+            <div style="grid-column:1 / -1;border:1px solid #e5ebf2;border-radius:12px;padding:16px;">
+              <h4 style="margin-bottom:12px;">Faturaya Malzeme Ekle</h4>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;">
+                <select id="invoiceProduct"></select>
+                <input type="number" id="invoiceProductQty" placeholder="Miktar" value="1" min="1">
+                <input type="number" id="invoiceProductPrice" placeholder="Birim Fiyat">
+                <button class="add-invoice-btn" onclick="addInvoiceProduct()">Ekle</button>
+              </div>
+              <table style="margin-top:14px;">
+                <thead>
+                  <tr>
+                    <th>Malzeme</th>
+                    <th>Miktar</th>
+                    <th>Birim Fiyat</th>
+                    <th>Tutar</th>
+                    <th>Sil</th>
+                  </tr>
+                </thead>
+                <tbody id="invoiceProductList"></tbody>
+              </table>
+            </div>
+            <input type="number" id="invoiceAmount" placeholder="Fatura Tutarı" readonly>
             <select id="invoiceStatus">
               <option value="Açık">Açık</option>
               <option value="Ödendi">Ödendi</option>
@@ -896,9 +917,78 @@
         option.textContent = 'Önce cari hesap ekleyin';
         select.appendChild(option);
       }
+
+      const productSelect = document.getElementById('invoiceProduct');
+      productSelect.innerHTML = '';
+      document.querySelectorAll('#priceTableBody tr').forEach(row => {
+        const cols = row.querySelectorAll('td');
+        const name = cols[1]?.innerText || '';
+        const sale = cols[4]?.innerText || '';
+        if (name) {
+          const option = document.createElement('option');
+          option.value = name;
+          option.textContent = name;
+          option.dataset.price = sale.replace('₺','').replace(/\./g,'').replace(',','.');
+          productSelect.appendChild(option);
+        }
+      });
+
+      if (!productSelect.innerHTML) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Önce fiyat listesine ürün ekleyin';
+        productSelect.appendChild(option);
+      }
+
+      document.getElementById('invoiceProductList').innerHTML = '';
+      document.getElementById('invoiceAmount').value = '';
+      document.getElementById('invoiceProductQty').value = 1;
+      document.getElementById('invoiceProductPrice').value = '';
       document.getElementById('invoiceDate').valueAsDate = new Date();
       document.getElementById('invoiceFormModal').classList.add('active');
       document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function addInvoiceProduct() {
+      const productSelect = document.getElementById('invoiceProduct');
+      const productName = productSelect.value;
+      const qty = Number(document.getElementById('invoiceProductQty').value || 1);
+      const selectedOption = productSelect.options[productSelect.selectedIndex];
+      const autoPrice = selectedOption?.dataset?.price || '';
+      const price = Number(document.getElementById('invoiceProductPrice').value || autoPrice || 0);
+
+      if (!productName || qty <= 0 || price <= 0) {
+        alert('Lütfen malzeme, miktar ve fiyat girin.');
+        return;
+      }
+
+      const total = qty * price;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${productName}</td>
+        <td>${qty}</td>
+        <td>₺${price.toLocaleString('tr-TR')},00</td>
+        <td class="invoice-line-total">₺${total.toLocaleString('tr-TR')},00</td>
+        <td><button class="delete-account" style="position:static;transform:none;" onclick="deleteInvoiceProduct(this)"><i class="fa-solid fa-trash"></i></button></td>
+      `;
+      document.getElementById('invoiceProductList').appendChild(row);
+      updateInvoiceTotal();
+      document.getElementById('invoiceProductQty').value = 1;
+      document.getElementById('invoiceProductPrice').value = '';
+    }
+
+    function deleteInvoiceProduct(button) {
+      button.closest('tr').remove();
+      updateInvoiceTotal();
+    }
+
+    function updateInvoiceTotal() {
+      let total = 0;
+      document.querySelectorAll('.invoice-line-total').forEach(item => {
+        const value = item.innerText.replace('₺','').replace(/\./g,'').replace(',','.');
+        total += Number(value || 0);
+      });
+      document.getElementById('invoiceAmount').value = total;
     }
 
     function closeInvoiceForm() {
@@ -916,6 +1006,7 @@
       const account = document.getElementById('invoiceAccount').value;
       const date = document.getElementById('invoiceDate').value;
       const dueDate = document.getElementById('invoiceDueDate').value;
+      updateInvoiceTotal();
       const amount = document.getElementById('invoiceAmount').value;
       const status = document.getElementById('invoiceStatus').value;
 
@@ -940,6 +1031,7 @@
       document.getElementById('invoiceNo').value = '';
       document.getElementById('invoiceAmount').value = '';
       document.getElementById('invoiceDueDate').value = '';
+      document.getElementById('invoiceProductList').innerHTML = '';
       closeInvoiceForm();
       saveAllData();
     }
@@ -1151,129 +1243,4 @@
           name: row.querySelector('h4')?.innerText || '',
           code: ps[0]?.innerText || '',
           phone: ps[1]?.innerText || '',
-          email: ps[2]?.innerText || '',
-          money: row.querySelector('.account-money')?.childNodes[0]?.textContent?.trim() || '₺0,00',
-          type: row.querySelector('.badge')?.innerText || ''
-        });
-      });
-
-      const movements = [];
-      document.querySelectorAll('#movementsTableBody tr').forEach(row => {
-        const cols = row.querySelectorAll('td');
-        movements.push({
-          date: cols[0]?.innerText || '',
-          account: cols[1]?.innerText || '',
-          action: cols[2]?.innerText || '',
-          amount: cols[3]?.innerText || '',
-          status: cols[4]?.innerText || '',
-          badgeClass: cols[4]?.querySelector('.badge')?.className || 'badge green-badge'
-        });
-      });
-
-      const prices = [];
-      document.querySelectorAll('#priceTableBody tr').forEach(row => {
-        const cols = row.querySelectorAll('td');
-        prices.push({
-          code: cols[0]?.innerText || '',
-          name: cols[1]?.innerText || '',
-          unit: cols[2]?.innerText || '',
-          purchase: cols[3]?.innerText || '',
-          sale: cols[4]?.innerText || '',
-          vat: cols[5]?.innerText || ''
-        });
-      });
-
-      const invoices = [];
-      document.querySelectorAll('#invoiceTableBody tr').forEach(row => {
-        const cols = row.querySelectorAll('td');
-        invoices.push({
-          no: cols[0]?.innerText || '',
-          account: cols[1]?.innerText || '',
-          date: cols[2]?.innerText || '',
-          dueDate: cols[3]?.innerText || '',
-          amount: cols[4]?.innerText || '',
-          status: cols[5]?.innerText || '',
-          badgeClass: cols[5]?.querySelector('.badge')?.className || 'badge red-badge'
-        });
-      });
-
-      localStorage.setItem('muhasebeProData', JSON.stringify({ accounts, movements, prices, invoices }));
-    }
-
-    function loadAllData() {
-      const saved = localStorage.getItem('muhasebeProData');
-      if (!saved) return;
-
-      const data = JSON.parse(saved);
-
-      const accountPanel = document.querySelector('#cari .panel');
-      document.querySelectorAll('#cari .account-row').forEach(row => row.remove());
-      [...(data.accounts || [])].reverse().forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'account-row';
-        row.innerHTML = `
-          <button class="delete-account" onclick="deleteAccount(this)"><i class="fa-solid fa-trash"></i></button>
-          <div>
-            <h4>${item.name}</h4>
-            <p>${item.code}</p>
-            <p>${item.phone}</p>
-            <p>${item.email}</p>
-          </div>
-          <div class="account-money">${item.money}<br>
-            <span class="badge ${item.type === 'Müşteri' ? 'green-badge' : item.type === 'Tedarikçi' ? 'orange-badge' : 'red-badge'}">${item.type}</span>
-          </div>
-        `;
-        document.querySelector('.add-account-form').insertAdjacentElement('afterend', row);
-      });
-
-      const movementTable = document.getElementById('movementsTableBody');
-      movementTable.innerHTML = '';
-      (data.movements || []).forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${item.date}</td>
-          <td>${item.account}</td>
-          <td>${item.action}</td>
-          <td>${item.amount}</td>
-          <td><span class="${item.badgeClass}">${item.status}</span></td>
-        `;
-        movementTable.appendChild(row);
-      });
-
-      const priceTable = document.getElementById('priceTableBody');
-      priceTable.innerHTML = '';
-      (data.prices || []).forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${item.code}</td>
-          <td>${item.name}</td>
-          <td>${item.unit}</td>
-          <td>${item.purchase}</td>
-          <td>${item.sale}</td>
-          <td>${item.vat}</td>
-          <td><button class="delete-account" style="position:static;transform:none;" onclick="deletePriceItem(this)"><i class="fa-solid fa-trash"></i></button></td>
-        `;
-        priceTable.appendChild(row);
-      });
-
-      const invoiceTable = document.getElementById('invoiceTableBody');
-      invoiceTable.innerHTML = '';
-      (data.invoices || []).forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${item.no}</td>
-          <td>${item.account}</td>
-          <td>${item.date}</td>
-          <td>${item.dueDate}</td>
-          <td>${item.amount}</td>
-          <td><span class="${item.badgeClass}">${item.status}</span></td>
-          <td><button class="delete-account" style="position:static;transform:none;" onclick="deleteInvoice(this)"><i class="fa-solid fa-trash"></i></button></td>
-        `;
-        invoiceTable.appendChild(row);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadAllData);
-  </script>
-</body>
-</html>
+          email
