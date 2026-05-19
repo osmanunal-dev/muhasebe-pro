@@ -255,6 +255,7 @@
       cursor: pointer;
     }
 
+    .add-invoice-form,
     .add-price-form,
     .add-account-form {
       position: fixed;
@@ -272,6 +273,7 @@
       gap: 16px;
     }
 
+    .add-invoice-form.active,
     .add-price-form.active,
     .add-account-form.active {
       display: grid;
@@ -294,6 +296,8 @@
       grid-template-columns: 1fr;
     }
 
+    .add-invoice-form input,
+    .add-invoice-form select,
     .add-price-form input,
     .add-price-form select,
     .add-account-form input,
@@ -306,6 +310,7 @@
       outline: none;
     }
 
+    .add-invoice-btn,
     .add-price-btn,
     .add-account-btn {
       height: 48px;
@@ -511,6 +516,7 @@
           <a href="#" data-page="cari"><i class="fa-regular fa-user"></i> Cari Hesaplar</a>
           <a href="#" data-page="hareketler"><i class="fa-solid fa-clock-rotate-left"></i> Cari Hareketleri</a>
           <a href="#" data-page="fiyatlar"><i class="fa-solid fa-tags"></i> Fiyat Listeleri</a>
+          <a href="#" data-page="faturalar"><i class="fa-regular fa-file-lines"></i> Faturalar</a>
         </nav>
 
         
@@ -728,6 +734,57 @@
         </section>
       </section>
 
+      <section id="faturalar" class="page">
+        <section class="panel">
+          <div class="panel-header">
+            <h3>Faturalar</h3>
+            <button class="small-btn" onclick="openInvoiceForm()">Yeni Fatura</button>
+          </div>
+
+          <div class="add-invoice-form" id="invoiceFormModal">
+            <input type="text" id="invoiceNo" placeholder="Fatura No">
+            <input type="date" id="invoiceDate">
+            <select id="invoiceAccount"></select>
+            <input type="number" id="invoiceAmount" placeholder="Fatura Tutarı">
+            <select id="invoiceStatus">
+              <option value="Açık">Açık</option>
+              <option value="Ödendi">Ödendi</option>
+              <option value="Kısmi">Kısmi</option>
+            </select>
+            <input type="date" id="invoiceDueDate">
+            <div style="grid-column:1 / -1;display:flex;justify-content:flex-end;gap:14px;margin-top:10px;">
+              <button class="add-invoice-btn" style="background:#e5ebf2;color:#10223a;min-width:160px;" onclick="closeInvoiceForm()">Kapat</button>
+              <button class="add-invoice-btn" style="min-width:200px;" onclick="addInvoice()">Fatura Ekle</button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Fatura No</th>
+                <th>Cari Hesap</th>
+                <th>Tarih</th>
+                <th>Vade Tarihi</th>
+                <th>Tutar</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceTableBody">
+              <tr>
+                <td>FAT-0001</td>
+                <td>ABC Ltd. Şti.</td>
+                <td>15.05.2025</td>
+                <td>14.06.2025</td>
+                <td>₺15.000,00</td>
+                <td><span class="badge red-badge">Açık</span></td>
+                <td><button class="delete-account" style="position:static;transform:none;" onclick="deleteInvoice(this)"><i class="fa-solid fa-trash"></i></button></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </section>
+
       <div class="info">
         <i class="fa-solid fa-info"></i>
         Verileriniz tarayıcınızda güvenli olarak saklanır. Uygulamayı kapatsanız bile bilgileriniz korunur.
@@ -759,6 +816,9 @@
         } else if (this.dataset.page === 'fiyatlar') {
           title.textContent = 'Fiyat Listeleri';
           subtitle.textContent = 'Ürün ve hizmet fiyatlarınızı yönetin.';
+        } else if (this.dataset.page === 'faturalar') {
+          title.textContent = 'Faturalar';
+          subtitle.textContent = 'Cari hesaplara ait faturaları takip edin.';
         } else {
           title.textContent = 'Muhasebe Pro';
           subtitle.textContent = 'Kasa yönetimi için yerel kayıtlı uygulama.';
@@ -819,6 +879,69 @@
     function closePriceForm() {
       document.getElementById('priceFormModal').classList.remove('active');
       document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function openInvoiceForm() {
+      const select = document.getElementById('invoiceAccount');
+      select.innerHTML = '';
+      document.querySelectorAll('#cari .account-row h4').forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.innerText;
+        option.textContent = item.innerText;
+        select.appendChild(option);
+      });
+      if (!select.innerHTML) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Önce cari hesap ekleyin';
+        select.appendChild(option);
+      }
+      document.getElementById('invoiceDate').valueAsDate = new Date();
+      document.getElementById('invoiceFormModal').classList.add('active');
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeInvoiceForm() {
+      document.getElementById('invoiceFormModal').classList.remove('active');
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function deleteInvoice(button) {
+      button.closest('tr').remove();
+      saveAllData();
+    }
+
+    function addInvoice() {
+      const no = document.getElementById('invoiceNo').value;
+      const account = document.getElementById('invoiceAccount').value;
+      const date = document.getElementById('invoiceDate').value;
+      const dueDate = document.getElementById('invoiceDueDate').value;
+      const amount = document.getElementById('invoiceAmount').value;
+      const status = document.getElementById('invoiceStatus').value;
+
+      if (!no || !account || !date || !amount) {
+        alert('Lütfen fatura no, cari hesap, tarih ve tutarı doldurun.');
+        return;
+      }
+
+      const badgeClass = status === 'Ödendi' ? 'green-badge' : status === 'Kısmi' ? 'orange-badge' : 'red-badge';
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${no}</td>
+        <td>${account}</td>
+        <td>${new Date(date).toLocaleDateString('tr-TR')}</td>
+        <td>${dueDate ? new Date(dueDate).toLocaleDateString('tr-TR') : '-'}</td>
+        <td>₺${Number(amount).toLocaleString('tr-TR')},00</td>
+        <td><span class="badge ${badgeClass}">${status}</span></td>
+        <td><button class="delete-account" style="position:static;transform:none;" onclick="deleteInvoice(this)"><i class="fa-solid fa-trash"></i></button></td>
+      `;
+
+      document.getElementById('invoiceTableBody').prepend(row);
+      document.getElementById('invoiceNo').value = '';
+      document.getElementById('invoiceAmount').value = '';
+      document.getElementById('invoiceDueDate').value = '';
+      closeInvoiceForm();
+      saveAllData();
     }
 
     function deletePriceItem(button) {
@@ -941,7 +1064,19 @@
     }
 
     function deleteAccount(button) {
-      button.closest('.account-row').remove();
+      const row = button.closest('.account-row');
+      const accountName = row.querySelector('h4')?.innerText || '';
+      const accountCode = row.querySelector('p')?.innerText || '';
+
+      row.remove();
+
+      document.querySelectorAll('#movementsTableBody tr').forEach(movementRow => {
+        const movementAccount = movementRow.querySelectorAll('td')[1]?.innerText || '';
+        if (movementAccount === accountName || movementAccount === accountCode) {
+          movementRow.remove();
+        }
+      });
+
       saveAllData();
     }
 
@@ -1048,7 +1183,21 @@
         });
       });
 
-      localStorage.setItem('muhasebeProData', JSON.stringify({ accounts, movements, prices }));
+      const invoices = [];
+      document.querySelectorAll('#invoiceTableBody tr').forEach(row => {
+        const cols = row.querySelectorAll('td');
+        invoices.push({
+          no: cols[0]?.innerText || '',
+          account: cols[1]?.innerText || '',
+          date: cols[2]?.innerText || '',
+          dueDate: cols[3]?.innerText || '',
+          amount: cols[4]?.innerText || '',
+          status: cols[5]?.innerText || '',
+          badgeClass: cols[5]?.querySelector('.badge')?.className || 'badge red-badge'
+        });
+      });
+
+      localStorage.setItem('muhasebeProData', JSON.stringify({ accounts, movements, prices, invoices }));
     }
 
     function loadAllData() {
@@ -1104,11 +1253,4 @@
           <td>${item.vat}</td>
           <td><button class="delete-account" style="position:static;transform:none;" onclick="deletePriceItem(this)"><i class="fa-solid fa-trash"></i></button></td>
         `;
-        priceTable.appendChild(row);
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadAllData);
-  </script>
-</body>
-</html>
+        priceTable.a
