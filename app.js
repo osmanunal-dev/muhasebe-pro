@@ -1,20 +1,18 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+/* ===================================================================
+   BULUT SENKRONİZASYONU AYARLARI  (yalnızca burayı doldurun)
+   -------------------------------------------------------------------
+   Firebase Console > Proje Ayarları > "Web uygulaması" config'inden
+   gelen değerleri aşağıya yapıştırın. Doldurmazsanız uygulama eskisi
+   gibi yalnızca bu tarayıcıda (localStorage) çalışmaya devam eder.
+   =================================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyAkx5rwdhmQMhyjSCs4sq_BvYV1-ihgh64",
   authDomain: "muhasebe-pro-6e8a0.firebaseapp.com",
   projectId: "muhasebe-pro-6e8a0",
   storageBucket: "muhasebe-pro-6e8a0.firebasestorage.app",
   messagingSenderId: "412057938716",
-  appId: "1:412057938716:web:48a287c6875c6f75a228d9"
+  appId: "1:412057938716:web:48a287c6875c6f75a228d9",
 };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 // Tüm cihazların paylaştığı tek çalışma alanı. İsterseniz bu metni
 // kendi belirlediğiniz gizli bir kelimeyle değiştirebilirsiniz; tüm
 // bilgisayarlarda AYNI olmalıdır.
@@ -575,10 +573,13 @@ async function initCloudSync() {
         // Kendi yazdığımız değişikliğin yankısını atla.
         if (snap.metadata.hasPendingWrites) return;
 
+        const localHasUsers = (data.users || []).length > 0;
+
         if (!snap.exists) {
-          // Bulutta henüz veri yok → mevcut yerel veriyle ilk kez oluştur.
+          // Bulutta henüz veri yok. Yalnızca gerçek bir kullanıcı hesabı
+          // varsa bulutu oluştur; demo/boş veriyle kirletme.
           cloudReady = true;
-          pushToCloud(true);
+          if (localHasUsers) pushToCloud(true);
           return;
         }
 
@@ -592,12 +593,16 @@ async function initCloudSync() {
           }
         }
 
-        // İlk senkron: buluttaki veri boşsa ve yerelde gerçek veri varsa,
-        // yereli koru ve buluta gönder (boş cihazın dolu cihazı ezmesini önler).
+        // İlk senkron kararı: buluttaki veri yereldekinden "fakir"se
+        // (özellikle yerelde kullanıcı varken bulutta yoksa) yereli koru
+        // ve buluta gönder. Böylece boş bir cihaz dolu cihazı ezemez.
         if (!cloudReady) {
           cloudReady = true;
-          if (parsed && dataWeight(parsed) === 0 && dataWeight(data) > 0) {
-            pushToCloud(true);
+          const remoteHasUsers = parsed && (parsed.users || []).length > 0;
+          const remotePoorer =
+            parsed && ((localHasUsers && !remoteHasUsers) || dataWeight(parsed) < dataWeight(data));
+          if (remotePoorer) {
+            if (localHasUsers) pushToCloud(true);
             return;
           }
         }
