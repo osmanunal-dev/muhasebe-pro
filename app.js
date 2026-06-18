@@ -1,18 +1,20 @@
-/* ===================================================================
-   BULUT SENKRONİZASYONU AYARLARI  (yalnızca burayı doldurun)
-   -------------------------------------------------------------------
-   Firebase Console > Proje Ayarları > "Web uygulaması" config'inden
-   gelen değerleri aşağıya yapıştırın. Doldurmazsanız uygulama eskisi
-   gibi yalnızca bu tarayıcıda (localStorage) çalışmaya devam eder.
-   =================================================================== */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "BURAYA_API_KEY",
-  authDomain: "BURAYA.firebaseapp.com",
-  projectId: "BURAYA_PROJECT_ID",
-  storageBucket: "BURAYA.appspot.com",
-  messagingSenderId: "BURAYA_SENDER_ID",
-  appId: "BURAYA_APP_ID",
+  apiKey: "AIzaSyAkx5rwdhmQMhyjSCs4sq_BvYV1-ihgh64",
+  authDomain: "muhasebe-pro-6e8a0.firebaseapp.com",
+  projectId: "muhasebe-pro-6e8a0",
+  storageBucket: "muhasebe-pro-6e8a0.firebasestorage.app",
+  messagingSenderId: "412057938716",
+  appId: "1:412057938716:web:48a287c6875c6f75a228d9"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 // Tüm cihazların paylaştığı tek çalışma alanı. İsterseniz bu metni
 // kendi belirlediğiniz gizli bir kelimeyle değiştirebilirsiniz; tüm
 // bilgisayarlarda AYNI olmalıdır.
