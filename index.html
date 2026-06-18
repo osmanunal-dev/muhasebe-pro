@@ -13,7 +13,28 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="shell">
+    <section class="login-screen" id="loginScreen">
+      <form class="login-card" id="loginForm">
+        <div class="brand-mark">MP</div>
+        <div>
+          <p class="eyebrow">Muhasebe Pro</p>
+          <h1>Giriş Yap</h1>
+        </div>
+        <label>
+          Kullanıcı Adı
+          <input id="loginUsername" type="text" autocomplete="username" required />
+        </label>
+        <label>
+          Şifre
+          <input id="loginPassword" type="password" autocomplete="current-password" required />
+        </label>
+        <p class="login-error" id="loginError"></p>
+        <button class="primary-button full" type="submit">Giriş Yap</button>
+        <p class="muted">Giriş bilgileri ayarlar bölümünden yönetilir.</p>
+      </form>
+    </section>
+
+    <div class="shell app-shell is-hidden" id="appShell">
       <aside class="sidebar" aria-label="Ana menü">
         <div class="brand">
           <div class="brand-mark">MP</div>
@@ -26,15 +47,35 @@
         <nav class="nav" id="nav">
           <button class="nav-item active" data-view="dashboard" type="button"><span>Genel Bakış</span></button>
           <button class="nav-item" data-view="invoices" type="button"><span>Satış Faturaları</span></button>
+          <button class="nav-item" data-view="quotes" type="button"><span>Fiyat Teklifleri</span></button>
           <button class="nav-item" data-view="expenses" type="button"><span>Alış Faturaları</span></button>
           <button class="nav-item" data-view="customers" type="button"><span>Cari Hesaplar</span></button>
           <button class="nav-item" data-view="customerMovements" type="button"><span>Cari Hareketler</span></button>
+          <button class="nav-item" data-view="customerTracking" type="button"><span>Müşteri Takip</span></button>
           <button class="nav-item" data-view="receipts" type="button"><span>Tahsilat</span></button>
           <button class="nav-item" data-view="products" type="button"><span>Ürünler</span></button>
           <button class="nav-item" data-view="debts" type="button"><span>Borç Takip</span></button>
           <button class="nav-item" data-view="reports" type="button"><span>Raporlar</span></button>
           <button class="nav-item" data-view="settings" type="button"><span>Ayarlar</span></button>
         </nav>
+
+        <div class="mini-tools" aria-label="Küçük araçlar">
+          <button class="mini-tool-button" id="todoToolBtn" type="button" aria-label="To do list">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+            </svg>
+          </button>
+          <button class="mini-tool-button" id="calendarToolBtn" type="button" aria-label="Takvim">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+            </svg>
+          </button>
+          <button class="mini-tool-button" id="ratesToolBtn" type="button" aria-label="Kurlar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v18M17 7.5c-.8-1.1-2.3-1.8-4.1-1.8-2.3 0-4.1 1.1-4.1 2.7 0 1.7 1.5 2.3 4.4 2.9 2.8.6 4 1.4 4 3.1 0 1.9-1.9 3.1-4.4 3.1-2 0-3.7-.7-4.8-2" />
+            </svg>
+          </button>
+        </div>
       </aside>
 
       <main class="workspace">
@@ -44,6 +85,8 @@
             <h1 id="pageTitle">Genel Bakış</h1>
           </div>
           <div class="top-actions">
+            <span class="session-user" id="sessionUser"></span>
+            <button class="secondary-button" id="logoutBtn" type="button">Çıkış</button>
             <button class="primary-button" id="quickInvoiceBtn" type="button">Yeni Satış Faturası</button>
           </div>
         </header>
@@ -109,6 +152,7 @@
                 <thead>
                   <tr>
                     <th>No</th>
+                    <th>Tür</th>
                     <th>Cari</th>
                     <th>Tarih</th>
                     <th>Tutar</th>
@@ -119,6 +163,38 @@
                 <tbody id="invoiceTable"></tbody>
               </table>
             </div>
+            <div class="pagination" id="invoicePagination"></div>
+          </section>
+        </section>
+
+        <section class="view" id="quotes">
+          <section class="panel table-panel">
+            <div class="panel-header with-tools">
+              <h2>Fiyat Teklifleri</h2>
+              <div class="panel-tools">
+                <input class="search" id="quoteSearch" type="search" placeholder="Fiyat teklifi ara" />
+                <button class="primary-button" id="addQuoteBtn" type="button">Fiyat Teklifi Ekle</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Müşteri</th>
+                    <th>Tarih</th>
+                    <th>Geçerlilik</th>
+                    <th>Açıklama</th>
+                    <th>Tutar</th>
+                    <th>Ekran</th>
+                    <th>Durum</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="quoteTable"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="quotePagination"></div>
           </section>
         </section>
 
@@ -150,6 +226,7 @@
                 <tbody id="expenseTable"></tbody>
               </table>
             </div>
+            <div class="pagination" id="expensePagination"></div>
           </section>
         </section>
 
@@ -157,9 +234,13 @@
           <section class="panel table-panel">
             <div class="panel-header with-tools">
               <h2>Cari Hesaplar</h2>
-              <button class="primary-button" id="addCustomerBtn" type="button">Cari Hesap Ekle</button>
+              <div class="panel-tools">
+                <input class="search" id="customerSearch" type="search" placeholder="Cari ara" />
+                <button class="primary-button" id="addCustomerBtn" type="button">Cari Hesap Ekle</button>
+              </div>
             </div>
             <div class="card-list" id="customerList"></div>
+            <div class="pagination" id="customerPagination"></div>
           </section>
         </section>
 
@@ -168,9 +249,7 @@
             <div class="panel-header with-tools">
               <h2>Cari Hesap Hareketleri</h2>
               <div class="panel-tools">
-                <select class="search" id="movementCustomerFilter">
-                  <option value="">Tüm cariler</option>
-                </select>
+                <select class="search" id="movementCustomerFilter"></select>
                 <input class="search" id="movementSearch" type="search" placeholder="Hareket ara" />
               </div>
             </div>
@@ -188,6 +267,7 @@
                     <th>Alacak</th>
                     <th>Bakiye</th>
                     <th>Durum</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody id="movementTable"></tbody>
@@ -196,73 +276,61 @@
           </section>
         </section>
 
-        <section class="view" id="receipts">
-          <div class="split-layout">
-            <form class="panel form-panel" id="receiptForm">
-              <div class="panel-header">
-                <h2>Tahsilat Yap</h2>
+        <section class="view" id="customerTracking">
+          <section class="panel table-panel">
+            <div class="panel-header with-tools">
+              <h2>Müşteri Takip</h2>
+              <div class="panel-tools">
+                <input class="search" id="trackingSearch" type="search" placeholder="Takip ara" />
+                <button class="primary-button" id="addTrackingBtn" type="button">Müşteri Takip Ekle</button>
               </div>
-              <label>
-                Cari Hesap
-                <select id="receiptCustomer" required></select>
-              </label>
-              <label>
-                Satış Faturası
-                <select id="receiptInvoice">
-                  <option value="">Fatura seçmeden tahsilat</option>
-                </select>
-              </label>
-              <div class="form-row">
-                <label>
-                  Tarih
-                  <input id="receiptDate" type="date" required />
-                </label>
-                <label>
-                  Tutar
-                  <input id="receiptAmount" type="text" inputmode="decimal" placeholder="0,00" required />
-                </label>
-              </div>
-              <div class="form-row">
-                <label>
-                  Ödeme Şekli
-                  <select id="receiptMethod">
-                    <option>Banka</option>
-                    <option>Nakit</option>
-                    <option>Kredi Kartı</option>
-                    <option>Çek/Senet</option>
-                  </select>
-                </label>
-                <label>
-                  Açıklama
-                  <input id="receiptNote" type="text" placeholder="Tahsilat açıklaması" />
-                </label>
-              </div>
-              <button class="primary-button full" type="submit">Tahsilatı Kaydet</button>
-            </form>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cari</th>
+                    <th>Görüşme</th>
+                    <th>Sonraki Takip</th>
+                    <th>Durum</th>
+                    <th>Not</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="trackingTable"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="trackingPagination"></div>
+          </section>
+        </section>
 
-            <section class="panel table-panel">
-              <div class="panel-header with-tools">
-                <h2>Tahsilatlar</h2>
+        <section class="view" id="receipts">
+          <section class="panel table-panel">
+            <div class="panel-header with-tools">
+              <h2>Tahsilatlar</h2>
+              <div class="panel-tools">
                 <input class="search" id="receiptSearch" type="search" placeholder="Tahsilat ara" />
               </div>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Tarih</th>
-                      <th>Cari</th>
-                      <th>Fatura</th>
-                      <th>Yöntem</th>
-                      <th>Tutar</th>
-                      <th>Açıklama</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="receiptTable"></tbody>
-                </table>
-              </div>
-            </section>
-          </div>
+              <button class="primary-button" id="addReceiptBtn" type="button">Tahsilat Yap</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tarih</th>
+                    <th>Cari</th>
+                    <th>Fatura</th>
+                    <th>Yöntem</th>
+                    <th>Tutar</th>
+                    <th>Açıklama</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="receiptTable"></tbody>
+              </table>
+            </div>
+            <div class="pagination" id="receiptPagination"></div>
+          </section>
         </section>
 
         <section class="view" id="products">
@@ -298,6 +366,7 @@
                 <tbody id="productTable"></tbody>
               </table>
             </div>
+            <div class="pagination" id="productPagination"></div>
           </section>
         </section>
 
@@ -312,6 +381,7 @@
                   CSV ile Aktar
                   <input id="debtCsvInput" type="file" accept=".csv,text/csv" />
                 </label>
+                <button class="secondary-button" id="bulkDebtMessageSettingsBtn" type="button">Mesaj Ayarla</button>
                 <button class="secondary-button" id="bulkDebtWhatsappBtn" type="button">Toplu WhatsApp</button>
                 <button class="secondary-button danger-action" id="deleteAllDebtsBtn" type="button">Tümünü Sil</button>
                 <button class="primary-button" id="addDebtBtn" type="button">Borçlu Cari Ekle</button>
@@ -322,11 +392,10 @@
                 <thead>
                   <tr>
                     <th><input id="selectAllDebts" type="checkbox" title="Tümünü seç" /></th>
-                    <th>Cari Kodu</th>
                     <th>Cari Adı</th>
+                    <th>İlgili Kişi</th>
                     <th>Telefon</th>
                     <th>Borç Tutarı</th>
-                    <th>Vade</th>
                     <th>Açıklama</th>
                     <th>Durum</th>
                     <th></th>
@@ -335,11 +404,22 @@
                 <tbody id="debtTable"></tbody>
               </table>
             </div>
+            <div class="debt-total-bar" id="debtTotalBar"></div>
           </section>
         </section>
 
         <section class="view" id="reports">
           <div class="report-grid">
+            <section class="panel wide-panel">
+              <div class="panel-header with-tools">
+                <h2>Tarih Aralığı</h2>
+                <div class="panel-tools">
+                  <input class="search" id="reportStartDate" type="date" />
+                  <input class="search" id="reportEndDate" type="date" />
+                  <button class="secondary-button" id="clearReportDatesBtn" type="button">Tüm Tarihler</button>
+                </div>
+              </div>
+            </section>
             <section class="panel">
               <div class="panel-header">
                 <h2>Özet</h2>
@@ -351,6 +431,24 @@
                 <h2>Tedarikçi Alışları</h2>
               </div>
               <div class="activity-list" id="categoryReport"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <h2>Fiyat Teklifleri</h2>
+              </div>
+              <dl class="report-list" id="quoteReportSummary"></dl>
+            </section>
+            <section class="panel">
+              <div class="panel-header">
+                <h2>En Çok Teklif Alanlar</h2>
+              </div>
+              <div class="activity-list" id="topQuoteCustomers"></div>
+            </section>
+            <section class="panel wide-panel">
+              <div class="panel-header">
+                <h2>En Çok Sipariş Geçenler</h2>
+              </div>
+              <div class="activity-list" id="topOrderCustomers"></div>
             </section>
             <section class="panel wide-panel">
               <div class="panel-header with-tools">
@@ -366,6 +464,59 @@
         </section>
 
         <section class="view" id="settings">
+          <section class="panel table-panel logo-settings-panel">
+            <div class="panel-header with-tools">
+              <h2>Firma Logosu</h2>
+              <button class="secondary-button" id="removeLogoBtn" type="button">Logoyu Sil</button>
+            </div>
+            <div class="logo-settings-body">
+              <div class="logo-preview-box" id="logoPreviewBox">
+                <span>Logo yok</span>
+              </div>
+              <label class="logo-upload">
+                Logo Seç
+                <input id="companyLogoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+              </label>
+            </div>
+            <form class="company-settings-form" id="companyForm">
+              <div class="form-row">
+                <label>
+                  Firma Adı
+                  <input id="companyName" type="text" placeholder="Firma adı" />
+                </label>
+                <label>
+                  Telefon
+                  <input id="companyPhone" type="tel" placeholder="Telefon" />
+                </label>
+              </div>
+              <div class="form-row">
+                <label>
+                  E-posta
+                  <input id="companyEmail" type="email" placeholder="E-posta" />
+                </label>
+                <label>
+                  Web Sitesi
+                  <input id="companyWebsite" type="text" placeholder="Web sitesi" />
+                </label>
+              </div>
+              <label>
+                Adres
+                <textarea id="companyAddress" rows="2" placeholder="Firma adresi"></textarea>
+              </label>
+              <div class="form-row">
+                <label>
+                  Vergi No
+                  <input id="companyTax" type="text" placeholder="Vergi numarası" />
+                </label>
+                <label>
+                  Vergi Dairesi
+                  <input id="companyTaxOffice" type="text" placeholder="Vergi dairesi" />
+                </label>
+              </div>
+              <button class="primary-button" type="submit">Firma Bilgilerini Kaydet</button>
+            </form>
+          </section>
+
           <div class="split-layout settings-layout">
             <form class="panel form-panel" id="bankForm">
               <div class="panel-header">
@@ -478,6 +629,7 @@
               Fatura Türü
               <select id="invoiceType">
                 <option>Satış Faturası</option>
+                <option>İade Faturası</option>
               </select>
             </label>
             <label>
@@ -489,7 +641,10 @@
           <div class="invoice-three-col">
             <label>
               Müşteri
-              <select id="invoiceCustomer" required></select>
+              <div class="select-action-row">
+                <select id="invoiceCustomer" required></select>
+                <button class="secondary-button" id="addInvoiceCustomerBtn" type="button">Yeni Cari</button>
+              </div>
             </label>
             <label>
               Fatura Tarihi
@@ -560,6 +715,11 @@
             </label>
           </div>
 
+          <label>
+            Açıklama
+            <textarea id="invoiceNote" rows="2" placeholder="Fatura açıklaması"></textarea>
+          </label>
+
           <div class="invoice-summary">
             <div><span>Ara Toplam:</span><strong id="invoiceSubtotalPreview">0,00 ₺</strong></div>
             <div><span>KDV (%20):</span><strong id="invoiceVatPreview">0,00 ₺</strong></div>
@@ -569,6 +729,108 @@
         <div class="dialog-actions">
           <button class="secondary-button" data-close-dialog type="button">İptal</button>
           <button class="primary-button" id="invoiceSaveBtn" type="submit">Kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="form-dialog invoice-create-dialog" id="quoteFormDialog">
+      <form class="form-panel dialog-form invoice-create-form" id="quoteForm">
+        <div class="dialog-header invoice-create-header">
+          <strong id="quoteFormTitle">Yeni Fiyat Teklifi Oluştur</strong>
+          <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
+        </div>
+        <div class="dialog-body invoice-create-body">
+          <div class="invoice-two-col">
+            <label>
+              Teklif No
+              <input id="quoteNumber" type="text" readonly />
+            </label>
+            <label>
+              Müşteri
+              <div class="select-action-row">
+                <select id="quoteCustomer" required></select>
+                <button class="secondary-button" id="addQuoteCustomerBtn" type="button">Yeni Cari</button>
+              </div>
+            </label>
+          </div>
+
+          <div class="invoice-three-col">
+            <label>
+              Teklif Tarihi
+              <input id="quoteDate" type="date" required />
+            </label>
+            <label>
+              Geçerlilik Tarihi
+              <input id="quoteValidUntil" type="date" required />
+            </label>
+            <label>
+              Durum
+              <select id="quoteStatus">
+                <option value="draft">Hazırlanıyor</option>
+                <option value="sent">Gönderildi</option>
+                <option value="accepted">Kabul Edildi</option>
+                <option value="rejected">Reddedildi</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="invoice-section-title">Teklif Kalemleri (Stok Kartından)</div>
+          <div class="invoice-lines" id="quoteLines">
+            <div class="invoice-line">
+              <input class="quote-line-code" id="quoteProductCode" list="productCodeList" placeholder="Stok kodu ara" />
+              <input class="quote-line-product" id="quoteProduct" list="productDescriptionList" placeholder="Açıklama ara" required />
+              <input class="quote-line-qty" id="quoteQty" type="text" inputmode="decimal" value="1" required />
+              <select class="quote-line-unit" id="quoteUnit">
+                <option>Adet</option>
+                <option>Kutu</option>
+                <option>Torba</option>
+                <option>Paket</option>
+                <option>Kg</option>
+                <option>m2</option>
+                <option>m3</option>
+                <option>Metre</option>
+                <option>Litre</option>
+                <option>Saat</option>
+                <option>Hizmet</option>
+              </select>
+              <input class="quote-line-price" id="quoteLinePrice" type="text" inputmode="decimal" value="0" required />
+              <select class="quote-line-vat" id="quoteVat">
+                <option value="0">%0</option>
+                <option value="1">%1</option>
+                <option value="10">%10</option>
+                <option value="20" selected>%20</option>
+              </select>
+              <output class="quote-line-total invoice-line-total" id="quoteLineTotal">0,00 ₺</output>
+              <button class="line-remove-button" type="button" title="Kalemi sil">×</button>
+            </div>
+          </div>
+          <button class="secondary-button add-line-button" id="addQuoteLineBtn" type="button">+ Kalem Ekle</button>
+
+          <label>
+            Açıklama
+            <textarea id="quoteNote" rows="2" placeholder="Teklif açıklaması"></textarea>
+          </label>
+
+          <div class="quote-screenshot-field">
+            <label>
+              Ekran Görüntüsü
+              <input id="quoteScreenshotInput" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <div class="quote-screenshot-preview" id="quoteScreenshotPreview">
+              <span>Görsel yok</span>
+            </div>
+            <button class="secondary-button" id="removeQuoteScreenshotBtn" type="button">Görseli Kaldır</button>
+          </div>
+
+          <div class="invoice-summary">
+            <div><span>Ara Toplam:</span><strong id="quoteSubtotalPreview">0,00 ₺</strong></div>
+            <div><span>KDV:</span><strong id="quoteVatPreview">0,00 ₺</strong></div>
+            <div class="invoice-grand-total"><span>Toplam:</span><strong id="quoteTotalPreview">0,00 ₺</strong></div>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" data-close-dialog type="button">İptal</button>
+          <button class="primary-button" id="quoteSaveBtn" type="submit">Kaydet</button>
         </div>
       </form>
     </dialog>
@@ -583,7 +845,10 @@
           <div class="invoice-two-col">
             <label>
               Tedarikçi
-              <select id="expenseCategory" required></select>
+              <div class="select-action-row">
+                <select id="expenseCategory" required></select>
+                <button class="secondary-button" id="addExpenseSupplierBtn" type="button">Yeni Cari</button>
+              </div>
             </label>
             <label>
               Fatura No
@@ -648,6 +913,10 @@
             <div><span>KDV (%20):</span><strong id="expenseVatPreview">0,00 ₺</strong></div>
             <div class="invoice-grand-total"><span>Toplam:</span><strong id="expenseTotalPreview">0,00 ₺</strong></div>
           </div>
+          <label>
+            Açıklama
+            <textarea id="expenseNote" rows="2" placeholder="Alış faturası açıklaması"></textarea>
+          </label>
           <input id="expenseAmount" type="hidden" value="0" />
         </div>
         <div class="dialog-actions">
@@ -660,7 +929,7 @@
     <dialog class="form-dialog" id="customerFormDialog">
       <form class="form-panel dialog-form" id="customerForm">
         <div class="dialog-header">
-          <strong>Cari Hesap Ekle</strong>
+          <strong id="customerFormTitle">Cari Hesap Ekle</strong>
           <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
         </div>
         <div class="dialog-body">
@@ -698,6 +967,10 @@
             </div>
           </label>
           <label>
+            Adres
+            <textarea id="customerAddress" rows="2"></textarea>
+          </label>
+          <label>
             Vergi No
             <input id="customerTax" type="text" />
           </label>
@@ -708,7 +981,100 @@
         </div>
         <div class="dialog-actions">
           <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
-          <button class="primary-button" type="submit">Cari Hesabı Kaydet</button>
+          <button class="primary-button" id="customerSaveBtn" type="submit">Cari Hesabı Kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="form-dialog" id="trackingFormDialog">
+      <form class="form-panel dialog-form" id="trackingForm">
+        <div class="dialog-header">
+          <strong id="trackingFormTitle">Müşteri Takip Ekle</strong>
+          <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
+        </div>
+        <div class="dialog-body">
+          <label>
+            Cari Hesap
+            <select id="trackingCustomer" required></select>
+          </label>
+          <div class="tracking-quotes-box" id="trackingQuoteList"></div>
+          <div class="form-row">
+            <label>
+              Görüşme Tarihi
+              <input id="trackingDate" type="date" required />
+            </label>
+            <label>
+              Sonraki Takip
+              <input id="trackingNextDate" type="date" />
+            </label>
+          </div>
+          <label>
+            Durum
+            <select id="trackingStatus">
+              <option value="pending">Takipte</option>
+              <option value="called">Arandı</option>
+              <option value="proposal">Teklif Verildi</option>
+              <option value="done">Tamamlandı</option>
+            </select>
+          </label>
+          <label>
+            Not
+            <textarea id="trackingNote" rows="4" placeholder="Görüşme notu"></textarea>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
+          <button class="primary-button" id="trackingSaveBtn" type="submit">Takibi Kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="form-dialog" id="receiptFormDialog">
+      <form class="form-panel dialog-form" id="receiptForm">
+        <div class="dialog-header">
+          <strong id="receiptFormTitle">Tahsilat Yap</strong>
+          <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
+        </div>
+        <div class="dialog-body">
+          <label>
+            Cari Hesap
+            <select id="receiptCustomer" required></select>
+          </label>
+          <label>
+            Satış Faturası
+            <select id="receiptInvoice">
+              <option value="">Fatura seçmeden tahsilat</option>
+            </select>
+          </label>
+          <div class="form-row">
+            <label>
+              Tarih
+              <input id="receiptDate" type="date" required />
+            </label>
+            <label>
+              Tutar
+              <input id="receiptAmount" type="text" inputmode="decimal" placeholder="0,00" required />
+            </label>
+          </div>
+          <div class="form-row">
+            <label>
+              Ödeme Şekli
+              <select id="receiptMethod">
+                <option>Banka</option>
+                <option>Nakit</option>
+                <option>Kredi Kartı</option>
+                <option>Çek/Senet</option>
+              </select>
+            </label>
+            <label>
+              Açıklama
+              <input id="receiptNote" type="text" placeholder="Tahsilat açıklaması" />
+            </label>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
+          <button class="primary-button" id="receiptSaveBtn" type="submit">Tahsilatı Kaydet</button>
         </div>
       </form>
     </dialog>
@@ -771,13 +1137,13 @@
     <dialog class="form-dialog" id="debtFormDialog">
       <form class="form-panel dialog-form" id="debtForm">
         <div class="dialog-header">
-          <strong>Borçlu Cari Ekle</strong>
+          <strong id="debtFormTitle">Borçlu Cari Ekle</strong>
           <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
         </div>
         <div class="dialog-body">
           <label>
-            Cari Kodu
-            <input id="debtCode" type="text" />
+            İlgili Kişi
+            <input id="debtContact" type="text" />
           </label>
           <label>
             Cari Adı
@@ -802,10 +1168,6 @@
               Borç Tutarı
               <input id="debtAmount" type="text" inputmode="decimal" placeholder="0,00" required />
             </label>
-            <label>
-              Vade Tarihi
-              <input id="debtDue" type="date" />
-            </label>
           </div>
           <label>
             Açıklama
@@ -821,7 +1183,7 @@
         </div>
         <div class="dialog-actions">
           <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
-          <button class="primary-button" type="submit">Borç Kaydet</button>
+          <button class="primary-button" id="debtSaveBtn" type="submit">Borç Kaydet</button>
         </div>
       </form>
     </dialog>
@@ -838,11 +1200,31 @@
             Mesaj
             <textarea id="whatsappMessageText" rows="10" required></textarea>
           </label>
-          <p class="muted">Toplu gönderimde {cari}, {tutar}, {kod} ve {telefon} alanları otomatik doldurulur.</p>
+          <p class="muted">Toplu gönderimde {cari}, {ilgili}, {tutar} ve {telefon} alanları otomatik doldurulur.</p>
         </div>
         <div class="dialog-actions">
           <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
           <button class="primary-button" id="whatsappSendBtn" type="submit">WhatsApp'a Gönder</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="form-dialog" id="bulkMessageSettingsDialog">
+      <form class="form-panel dialog-form" id="bulkMessageSettingsForm">
+        <div class="dialog-header">
+          <strong>Toplu Mesaj Ayarla</strong>
+          <button class="icon-button" data-close-dialog type="button" title="Kapat">×</button>
+        </div>
+        <div class="dialog-body">
+          <label>
+            Mesaj Şablonu
+            <textarea id="bulkMessageTemplate" rows="10" required></textarea>
+          </label>
+          <p class="muted">{cari}, {ilgili}, {tutar} ve {telefon} alanları gönderim sırasında otomatik doldurulur. Banka hesap bilgileriniz mesajın altına eklenir.</p>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" data-close-dialog type="button">Vazgeç</button>
+          <button class="primary-button" type="submit">Şablonu Kaydet</button>
         </div>
       </form>
     </dialog>
@@ -854,10 +1236,69 @@
       </div>
       <div id="invoicePreview"></div>
       <div class="dialog-actions">
-        <button class="secondary-button" id="printInvoiceBtn" type="button">Yazdır</button>
+        <button class="secondary-button" id="printInvoiceBtn" type="button">PDF / Yazdır</button>
       </div>
     </dialog>
 
+    <dialog id="receiptDialog">
+      <div class="dialog-header">
+        <strong>Tahsilat Makbuzu</strong>
+        <button class="icon-button" id="closeReceiptDialogBtn" type="button" title="Kapat">×</button>
+      </div>
+      <div id="receiptPreview"></div>
+      <div class="dialog-actions">
+        <button class="secondary-button" id="printReceiptBtn" type="button">PDF / Yazdır</button>
+      </div>
+    </dialog>
+
+    <dialog id="imageDialog">
+      <div class="dialog-header">
+        <strong>Ekran Görüntüsü</strong>
+        <button class="icon-button" id="closeImageDialogBtn" type="button" title="Kapat">×</button>
+      </div>
+      <div class="image-preview-large" id="imageDialogPreview"></div>
+    </dialog>
+
+    <aside class="mini-tool-panel" id="miniToolPanel" aria-live="polite">
+      <div class="mini-tool-panel-head">
+        <div>
+          <span id="miniToolEyebrow">Mini Araç</span>
+          <h2 id="miniToolTitle">To do list</h2>
+        </div>
+        <button class="icon-button" id="closeMiniToolBtn" type="button" aria-label="Kapat">×</button>
+      </div>
+
+      <section class="mini-tool-section" id="todoToolPanel">
+        <form class="mini-tool-form" id="todoForm">
+          <input id="todoInput" type="text" maxlength="80" placeholder="Yeni görev ekle" />
+          <button class="primary-button compact" type="submit">Ekle</button>
+        </form>
+        <div class="mini-tool-list" id="todoList"></div>
+      </section>
+
+      <section class="mini-tool-section is-hidden" id="calendarToolPanel">
+        <form class="mini-tool-form calendar-form" id="calendarForm">
+          <input id="calendarDate" type="date" />
+          <input id="calendarNote" type="text" maxlength="90" placeholder="Not ekle" />
+          <button class="primary-button compact" type="submit">Ekle</button>
+        </form>
+        <div class="mini-tool-list" id="calendarList"></div>
+      </section>
+
+      <section class="mini-tool-section is-hidden" id="ratesToolPanel">
+        <p class="mini-tool-empty" id="ratesStatus">Kurlar yükleniyor.</p>
+        <div class="mini-rate-list" id="ratesList"></div>
+        <a class="mini-tool-link" href="https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+page+site+area/bugun" target="_blank" rel="noreferrer">
+          TCMB bugünkü kurlar sayfası
+        </a>
+        <button class="primary-button full" id="refreshRatesBtn" type="button">Güncelle</button>
+      </section>
+    </aside>
+
+    <!-- Firebase (bulut senkronizasyonu) -->
+    <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore-compat.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
