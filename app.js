@@ -243,6 +243,15 @@ const els = {
   movementSearch: document.querySelector("#movementSearch"),
   movementSummary: document.querySelector("#movementSummary"),
   movementTable: document.querySelector("#movementTable"),
+  statementStart: document.querySelector("#statementStart"),
+  statementEnd: document.querySelector("#statementEnd"),
+  statementBtn: document.querySelector("#statementBtn"),
+  statementDetailBtn: document.querySelector("#statementDetailBtn"),
+  statementDialog: document.querySelector("#statementDialog"),
+  statementDialogTitle: document.querySelector("#statementDialogTitle"),
+  statementPreview: document.querySelector("#statementPreview"),
+  printStatementBtn: document.querySelector("#printStatementBtn"),
+  closeStatementDialogBtn: document.querySelector("#closeStatementDialogBtn"),
   addTrackingBtn: document.querySelector("#addTrackingBtn"),
   trackingFormDialog: document.querySelector("#trackingFormDialog"),
   trackingForm: document.querySelector("#trackingForm"),
@@ -4711,6 +4720,194 @@ function printableDocumentHtml(content, title) {
     </html>`;
 }
 
+/* ===================================================================
+   CARİ HESAP EKSTRESİ
+   - "Cari Hesap Ekstresi": özet (Tarih / Açıklama / Borç / Alacak / Bakiye)
+   - "Detaylı Cari Hesap Ekstresi": hareket türü, belge ve durum sütunları
+     ile birlikte ayrıca tür bazlı özet tablosu.
+   Seçili cari hesap ve (opsiyonel) tarih aralığına göre çalışır.
+   =================================================================== */
+function statementBalanceLabel(value) {
+  if (Math.abs(value) < 0.005) return `${money(0)} (Kapalı)`;
+  return `${money(Math.abs(value))} ${value > 0 ? "Borç" : "Alacak"}`;
+}
+
+function buildStatementModel(customerId, startDate, endDate) {
+  const customer = getCustomer(customerId);
+  const all = buildCustomerMovements(customerId);
+  let opening = 0;
+  let debitTotal = 0;
+  let creditTotal = 0;
+  const byType = {};
+  const rows = [];
+
+  all.forEach((movement) => {
+    const day = (movement.date || "").slice(0, 10);
+    if (startDate && day < startDate) {
+      opening += (movement.debit || 0) - (movement.credit || 0);
+      return;
+    }
+    if (endDate && day > endDate) return;
+    debitTotal += movement.debit || 0;
+    creditTotal += movement.credit || 0;
+    const bucket = byType[movement.type] || { type: movement.type, count: 0, debit: 0, credit: 0 };
+    bucket.count += 1;
+    bucket.debit += movement.debit || 0;
+    bucket.credit += movement.credit || 0;
+    byType[movement.type] = bucket;
+    rows.push(movement);
+  });
+
+  let running = opening;
+  const withBalance = rows.map((movement) => {
+    running += (movement.debit || 0) - (movement.credit || 0);
+    return { ...movement, balance: running };
+  });
+
+  return {
+    customer,
+    opening,
+    rows: withBalance,
+    debitTotal,
+    creditTotal,
+    closing: opening + debitTotal - creditTotal,
+    byType: Object.values(byType).sort((a, b) => b.debit + b.credit - (a.debit + a.credit)),
+    startDate,
+    endDate,
+  };
+}
+
+function statementPeriodText(model) {
+  const start = model.startDate ? shortDate(model.startDate) : "Başlangıç";
+  const end = model.endDate ? shortDate(model.endDate) : "Bugün";
+  return `${start} – ${end}`;
+}
+
+function statementHeaderHtml(model, title) {
+  const customer = model.customer;
+  return `
+    <header>
+      ${documentBrand(title)}
+      <div>
+        <strong>${customer?.name || "Cari"}</strong>
+        <p class="muted">Cari Kodu: ${customer?.code || "-"}<br />Dönem: ${statementPeriodText(model)}<br />Düzenleme: ${shortDate(today())}</p>
+      </div>
+    </header>
+    <section>
+      ${customerInvoiceInfo(customer)}
+    </section>`;
+}
+
+const R = ' style="text-align:right"';
+
+function statementSummaryTable(model) {
+  const opening = model.startDate
+    ? `<tr><td>${shortDate(model.startDate)}</td><td>Devreden Bakiye</td><td${R}>-</td><td${R}>-</td><td${R}>${money(model.opening)}</td></tr>`
+    : "";
+  const body = model.rows
+    .map(
+      (m) => `
+      <tr>
+        <td>${shortDate(m.date)}</td>
+        <td>${m.type}${m.description ? " – " + m.description : ""}</td>
+        <td${R}>${m.debit ? money(m.debit) : "-"}</td>
+        <td${R}>${m.credit ? money(m.credit) : "-"}</td>
+        <td${R}>${money(m.balance)}</td>
+      </tr>`,
+    )
+    .join("");
+  const empty =
+    !model.rows.length && !opening
+      ? `<tr><td colspan="5"><div class="empty-state">Bu dönem için hareket bulunamadı.</div></td></tr>`
+      : "";
+  return `
+    <table>
+      <thead>
+        <tr><th>Tarih</th><th>Açıklama</th><th${R}>Borç</th><th${R}>Alacak</th><th${R}>Bakiye</th></tr>
+      </thead>
+      <tbody>${opening}${body}${empty}</tbody>
+      <tfoot>
+        <tr><th colspan="2"${R}>Dönem Toplamı</th><th${R}>${money(model.debitTotal)}</th><th${R}>${money(model.creditTotal)}</th><th${R}>${money(model.closing)}</th></tr>
+      </tfoot>
+    </table>`;
+}
+
+function statementDetailedTable(model) {
+  const opening = model.startDate
+    ? `<tr><td>${shortDate(model.startDate)}</td><td>${model.customer?.code || "-"}</td><td>Devir</td><td>Devreden Bakiye</td><td>-</td><td${R}>-</td><td${R}>-</td><td${R}>${money(model.opening)}</td></tr>`
+    : "";
+  const body = model.rows
+    .map(
+      (m) => `
+      <tr>
+        <td>${shortDate(m.date)}</td>
+        <td>${m.customerCode || "-"}</td>
+        <td>${m.type}</td>
+        <td>${m.description || "-"}</td>
+        <td>${m.status || "-"}</td>
+        <td${R}>${m.debit ? money(m.debit) : "-"}</td>
+        <td${R}>${m.credit ? money(m.credit) : "-"}</td>
+        <td${R}>${money(m.balance)}</td>
+      </tr>`,
+    )
+    .join("");
+  const empty =
+    !model.rows.length && !opening
+      ? `<tr><td colspan="8"><div class="empty-state">Bu dönem için hareket bulunamadı.</div></td></tr>`
+      : "";
+  const breakdown = model.byType.length
+    ? `
+      <h3 style="margin:14px 0 4px;font-size:12px">Hareket Türü Özeti</h3>
+      <table>
+        <thead><tr><th>Hareket Türü</th><th${R}>Adet</th><th${R}>Borç</th><th${R}>Alacak</th></tr></thead>
+        <tbody>${model.byType
+          .map(
+            (t) =>
+              `<tr><td>${t.type}</td><td${R}>${t.count}</td><td${R}>${money(t.debit)}</td><td${R}>${money(t.credit)}</td></tr>`,
+          )
+          .join("")}</tbody>
+      </table>`
+    : "";
+  return `
+    <table>
+      <thead>
+        <tr><th>Tarih</th><th>Cari Kodu</th><th>Hareket</th><th>Açıklama</th><th>Durum</th><th${R}>Borç</th><th${R}>Alacak</th><th${R}>Bakiye</th></tr>
+      </thead>
+      <tbody>${opening}${body}${empty}</tbody>
+      <tfoot>
+        <tr><th colspan="5"${R}>Dönem Toplamı</th><th${R}>${money(model.debitTotal)}</th><th${R}>${money(model.creditTotal)}</th><th${R}>${money(model.closing)}</th></tr>
+      </tfoot>
+    </table>
+    ${breakdown}`;
+}
+
+function renderStatement(detailed) {
+  const customerId = els.movementCustomerFilter?.value || "";
+  if (!customerId) {
+    alert("Lütfen önce yukarıdan bir cari hesap seçin.");
+    return;
+  }
+  const startDate = els.statementStart?.value || "";
+  const endDate = els.statementEnd?.value || "";
+  if (startDate && endDate && startDate > endDate) {
+    alert("Başlangıç tarihi bitiş tarihinden sonra olamaz.");
+    return;
+  }
+
+  const model = buildStatementModel(customerId, startDate, endDate);
+  const title = detailed ? "DETAYLI CARİ HESAP EKSTRESİ" : "CARİ HESAP EKSTRESİ";
+
+  els.statementPreview.innerHTML = `
+    <article class="invoice-paper statement-paper">
+      ${statementHeaderHtml(model, title)}
+      ${detailed ? statementDetailedTable(model) : statementSummaryTable(model)}
+      <p style="margin-top:10px"><strong>Kapanış Bakiyesi:</strong> ${statementBalanceLabel(model.closing)}</p>
+    </article>`;
+
+  els.statementDialogTitle.textContent = detailed ? "Detaylı Cari Hesap Ekstresi" : "Cari Hesap Ekstresi";
+  els.statementDialog.showModal();
+}
+
 function printPreviewAsPdf(previewElement, title) {
   if (!previewElement?.innerHTML.trim()) return;
 
@@ -5172,6 +5369,13 @@ els.closeDialogBtn.addEventListener("click", () => els.invoiceDialog.close());
 els.printInvoiceBtn.addEventListener("click", () => printPreviewAsPdf(els.invoicePreview, "Fatura PDF"));
 els.closeReceiptDialogBtn.addEventListener("click", () => els.receiptDialog.close());
 els.printReceiptBtn.addEventListener("click", () => printPreviewAsPdf(els.receiptPreview, "Tahsilat Makbuzu PDF"));
+
+els.statementBtn?.addEventListener("click", () => renderStatement(false));
+els.statementDetailBtn?.addEventListener("click", () => renderStatement(true));
+els.closeStatementDialogBtn?.addEventListener("click", () => els.statementDialog.close());
+els.printStatementBtn?.addEventListener("click", () =>
+  printPreviewAsPdf(els.statementPreview, els.statementDialogTitle?.textContent || "Cari Hesap Ekstresi"),
+);
 els.closeImageDialogBtn.addEventListener("click", () => els.imageDialog.close());
 els.todoToolBtn.addEventListener("click", () => openMiniTool("todo"));
 els.calendarToolBtn.addEventListener("click", () => openMiniTool("calendar"));

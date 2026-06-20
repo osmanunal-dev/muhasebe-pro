@@ -251,6 +251,10 @@
               <div class="panel-tools">
                 <select class="search" id="movementCustomerFilter"></select>
                 <input class="search" id="movementSearch" type="search" placeholder="Hareket ara" />
+                <input class="search" id="statementStart" type="date" title="Ekstre başlangıç tarihi" />
+                <input class="search" id="statementEnd" type="date" title="Ekstre bitiş tarihi" />
+                <button class="secondary-button" id="statementBtn" type="button">Cari Hesap Ekstresi</button>
+                <button class="secondary-button" id="statementDetailBtn" type="button">Detaylı Cari Hesap Ekstresi</button>
               </div>
             </div>
             <dl class="report-list movement-summary" id="movementSummary"></dl>
@@ -1237,6 +1241,17 @@
       <div id="invoicePreview"></div>
       <div class="dialog-actions">
         <button class="secondary-button" id="printInvoiceBtn" type="button">PDF / Yazdır</button>
+      </div>
+    </dialog>
+
+    <dialog id="statementDialog">
+      <div class="dialog-header">
+        <strong id="statementDialogTitle">Cari Hesap Ekstresi</strong>
+        <button class="icon-button" id="closeStatementDialogBtn" type="button" title="Kapat">×</button>
+      </div>
+      <div id="statementPreview"></div>
+      <div class="dialog-actions">
+        <button class="secondary-button" id="printStatementBtn" type="button">PDF / Yazdır</button>
       </div>
     </dialog>
 
